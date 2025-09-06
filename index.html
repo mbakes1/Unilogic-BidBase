@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OCDS Releases - eTenders</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>OCDS Releases</h1>
+            <p>South African Government Procurement Data</p>
+        </header>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="dateFrom">From Date:</label>
+                <input type="date" id="dateFrom" value="2024-01-01" />
+            </div>
+            <div class="filter-group">
+                <label for="dateTo">To Date:</label>
+                <input type="date" id="dateTo" value="2025-07-19" />
+            </div>
+            <div class="filter-group">
+                <label for="pageSize">Page Size:</label>
+                <select id="pageSize">
+                    <option value="10">10</option>
+                    <option value="50" selected>50</option>
+                    <option value="100">100</option>
+                    <option value="500">500</option>
+                    <option value="1000">1000</option>
+                    <option value="5000">5000</option>
+                    <option value="10000">10000</option>
+                    <option value="20000">20000</option>
+                </select>
+            </div>
+            <button id="loadData" class="btn-primary">Load Releases</button>
+        </div>
+
+        <div id="loading" class="loading hidden">Loading...</div>
+        <div id="error" class="error hidden"></div>
+
+        <div class="stats">
+            <span id="totalCount">Total: 0</span>
+            <span id="currentPage">Page: 1</span>
+        </div>
+
+        <div id="releases" class="releases-grid"></div>
+
+        <div class="pagination">
+            <button id="prevPage" class="btn-secondary" disabled>Previous</button>
+            <button id="nextPage" class="btn-secondary">Next</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
