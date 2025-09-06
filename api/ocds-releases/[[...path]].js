@@ -23,21 +23,18 @@ function saveToCache(key, data) {
   })
 }
 
-export default async function handler(request, context) {
+export default async function handler(request, response) {
   const url = new URL(request.url)
   const pathname = url.pathname
   
   try {
     // Handle CORS preflight requests
     if (request.method === 'OPTIONS') {
-      return new Response(null, {
-        status: 204,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
-        },
-      })
+      response.status(204).setHeader('Access-Control-Allow-Origin', '*')
+        .setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        .setHeader('Access-Control-Allow-Headers', 'Content-Type')
+        .send()
+      return
     }
     
     // Handle list requests (/api/ocds-releases)
@@ -49,40 +46,36 @@ export default async function handler(request, context) {
       const cachedData = getFromCache(targetUrl)
       if (cachedData) {
         console.log(`Cache hit for: ${targetUrl}`)
-        return new Response(cachedData, {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
-            'X-Cache': 'HIT',
-          },
-        })
+        response.status(200)
+          .setHeader('Content-Type', 'application/json')
+          .setHeader('Access-Control-Allow-Origin', '*')
+          .setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+          .setHeader('Access-Control-Allow-Headers', 'Content-Type')
+          .setHeader('X-Cache', 'HIT')
+          .send(cachedData)
+        return
       }
       
       // Make the request to the actual API
-      const response = await fetch(targetUrl)
+      const apiResponse = await fetch(targetUrl)
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      if (!apiResponse.ok) {
+        throw new Error(`HTTP error! status: ${apiResponse.status}`)
       }
       
-      const data = await response.text()
+      const data = await apiResponse.text()
       
       // Cache the response
       saveToCache(targetUrl, data)
       
-      return new Response(data, {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
-          'X-Cache': 'MISS',
-        },
-      })
+      response.status(200)
+        .setHeader('Content-Type', 'application/json')
+        .setHeader('Access-Control-Allow-Origin', '*')
+        .setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        .setHeader('Access-Control-Allow-Headers', 'Content-Type')
+        .setHeader('X-Cache', 'MISS')
+        .send(data)
+      return
     }
     
     // Handle detail requests (/api/ocds-releases/release/:ocid)
@@ -94,62 +87,52 @@ export default async function handler(request, context) {
       const cachedData = getFromCache(targetUrl)
       if (cachedData) {
         console.log(`Cache hit for: ${targetUrl}`)
-        return new Response(cachedData, {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type',
-            'X-Cache': 'HIT',
-          },
-        })
+        response.status(200)
+          .setHeader('Content-Type', 'application/json')
+          .setHeader('Access-Control-Allow-Origin', '*')
+          .setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+          .setHeader('Access-Control-Allow-Headers', 'Content-Type')
+          .setHeader('X-Cache', 'HIT')
+          .send(cachedData)
+        return
       }
       
       // Make the request to the actual API
-      const response = await fetch(targetUrl)
+      const apiResponse = await fetch(targetUrl)
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      if (!apiResponse.ok) {
+        throw new Error(`HTTP error! status: ${apiResponse.status}`)
       }
       
-      const data = await response.text()
+      const data = await apiResponse.text()
       
       // Cache the response
       saveToCache(targetUrl, data)
       
-      return new Response(data, {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type',
-          'X-Cache': 'MISS',
-        },
-      })
+      response.status(200)
+        .setHeader('Content-Type', 'application/json')
+        .setHeader('Access-Control-Allow-Origin', '*')
+        .setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        .setHeader('Access-Control-Allow-Headers', 'Content-Type')
+        .setHeader('X-Cache', 'MISS')
+        .send(data)
+      return
     }
     
     // Handle not found
-    return new Response('Not Found', {
-      status: 404,
-      headers: {
-        'Content-Type': 'text/plain',
-        'Access-Control-Allow-Origin': '*',
-      },
-    })
+    response.status(404)
+      .setHeader('Content-Type', 'text/plain')
+      .setHeader('Access-Control-Allow-Origin', '*')
+      .send('Not Found')
   } catch (error) {
     console.error('Proxy error:', error)
-    return new Response(`Proxy Error: ${error.message}`, {
-      status: 500,
-      headers: {
-        'Content-Type': 'text/plain',
-        'Access-Control-Allow-Origin': '*',
-      },
-    })
+    response.status(500)
+      .setHeader('Content-Type', 'text/plain')
+      .setHeader('Access-Control-Allow-Origin', '*')
+      .send(`Proxy Error: ${error.message}`)
   }
 }
 
 export const config = {
-  runtime: 'edge',
+  runtime: 'nodejs18.x',
 }
