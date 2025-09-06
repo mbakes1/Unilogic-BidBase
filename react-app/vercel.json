@@ -1,0 +1,10 @@
+{
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/ocds-releases/[[...path]]" }
+  ],
+  "functions": {
+    "api/ocds-releases/[[...path]].js": {
+      "runtime": "edge"
+    }
+  }
+}
