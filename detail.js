@@ -70,46 +70,52 @@ class TenderDetailViewer {
 
         // Optimize DOM updates by building HTML string first
         let detailHTML = `
-            <div class="detail-card">
-                <div class="detail-header">
-                    <h2 class="detail-title">${this.escapeHtml(tender.title || 'Untitled Tender')}</h2>
-                    <div class="detail-meta">
-                        <span class="meta-badge">OCID: ${release.ocid}</span>
-                        <span class="meta-badge">ID: ${tender.id || 'N/A'}</span>
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+                <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-6">
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3">${this.escapeHtml(tender.title || 'Untitled Tender')}</h2>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200 text-xs px-3 py-1 rounded-full">OCID: ${release.ocid}</span>
+                        <span class="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs px-3 py-1 rounded-full">ID: ${tender.id || 'N/A'}</span>
                     </div>
                 </div>
 
-                <div class="detail-section">
-                    <h3>Description</h3>
-                    <p>${this.escapeHtml(tender.description || 'No description available')}</p>
+                <div class="mb-8">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Description</h3>
+                    <p class="text-gray-700 dark:text-gray-300">${this.escapeHtml(tender.description || 'No description available')}</p>
                 </div>
 
-                <div class="detail-grid">
-                    <div class="detail-section">
-                        <h3>Procuring Entity</h3>
-                        <p>${procuringEntity.name || buyer.name || 'N/A'}</p>
-                        ${procuringEntity.id ? `<p class="detail-sub">ID: ${procuringEntity.id}</p>` : ''}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-5">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Procuring Entity</h3>
+                        <p class="text-gray-700 dark:text-gray-300 mb-2">${procuringEntity.name || buyer.name || 'N/A'}</p>
+                        ${procuringEntity.id ? `<p class="text-sm text-gray-600 dark:text-gray-400">ID: ${procuringEntity.id}</p>` : ''}
                     </div>
 
-                    <div class="detail-section">
-                        <h3>Procurement Details</h3>
-                        <p><strong>Method:</strong> ${tender.procurementMethodDetails || tender.procurementMethod || 'N/A'}</p>
-                        <p><strong>Category:</strong> ${tender.mainProcurementCategory || 'N/A'}</p>
-                        ${tender.additionalProcurementCategories && tender.additionalProcurementCategories.length > 0 ? 
-                            `<p><strong>Additional Categories:</strong> ${tender.additionalProcurementCategories.join(', ')}</p>` : ''}
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-5">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Procurement Details</h3>
+                        <div class="space-y-2">
+                            <p class="text-gray-700 dark:text-gray-300"><span class="font-medium">Method:</span> ${tender.procurementMethodDetails || tender.procurementMethod || 'N/A'}</p>
+                            <p class="text-gray-700 dark:text-gray-300"><span class="font-medium">Category:</span> ${tender.mainProcurementCategory || 'N/A'}</p>
+                            ${tender.additionalProcurementCategories && tender.additionalProcurementCategories.length > 0 ? 
+                                `<p class="text-gray-700 dark:text-gray-300"><span class="font-medium">Additional Categories:</span> ${tender.additionalProcurementCategories.join(', ')}</p>` : ''}
+                        </div>
                     </div>
 
-                    <div class="detail-section">
-                        <h3>Tender Period</h3>
-                        <p><strong>Start:</strong> ${this.formatDateISO(tenderPeriod.startDate)}</p>
-                        <p><strong>End:</strong> ${this.formatDateISO(tenderPeriod.endDate)}</p>
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-5">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Tender Period</h3>
+                        <div class="space-y-2">
+                            <p class="text-gray-700 dark:text-gray-300"><span class="font-medium">Start:</span> ${this.formatDateISO(tenderPeriod.startDate)}</p>
+                            <p class="text-gray-700 dark:text-gray-300"><span class="font-medium">End:</span> ${this.formatDateISO(tenderPeriod.endDate)}</p>
+                        </div>
                     </div>
 
-                    <div class="detail-section">
-                        <h3>Release Information</h3>
-                        <p><strong>Date:</strong> ${this.formatDateISO(release.date)}</p>
-                        <p><strong>Language:</strong> ${release.language || 'N/A'}</p>
-                        <p><strong>Tags:</strong> ${release.tag ? release.tag.join(', ') : 'N/A'}</p>
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-5">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Release Information</h3>
+                        <div class="space-y-2">
+                            <p class="text-gray-700 dark:text-gray-300"><span class="font-medium">Date:</span> ${this.formatDateISO(release.date)}</p>
+                            <p class="text-gray-700 dark:text-gray-300"><span class="font-medium">Language:</span> ${release.language || 'N/A'}</p>
+                            <p class="text-gray-700 dark:text-gray-300"><span class="font-medium">Tags:</span> ${release.tag ? release.tag.join(', ') : 'N/A'}</p>
+                        </div>
                     </div>
                 </div>
 
@@ -125,25 +131,25 @@ class TenderDetailViewer {
         let documentsHTML = '';
         documents.forEach(doc => {
             documentsHTML += `
-                <div class="document-item">
-                    <div class="document-info">
-                        <h4>${this.escapeHtml(doc.title || 'Untitled Document')}</h4>
-                        ${doc.description ? `<p>${this.escapeHtml(doc.description)}</p>` : ''}
-                        <div class="document-meta">
+                <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-5 mb-4 flex flex-col sm:flex-row justify-between gap-4">
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-gray-900 dark:text-white mb-2">${this.escapeHtml(doc.title || 'Untitled Document')}</h4>
+                        ${doc.description ? `<p class="text-gray-700 dark:text-gray-300 text-sm mb-3">${this.escapeHtml(doc.description)}</p>` : ''}
+                        <div class="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400">
                             <span>Format: ${doc.format || 'N/A'}</span>
                             <span>Published: ${this.formatDateISO(doc.datePublished)}</span>
                             ${doc.dateModified ? `<span>Modified: ${this.formatDateISO(doc.dateModified)}</span>` : ''}
                         </div>
                     </div>
-                    ${doc.url ? `<a href="${doc.url}" target="_blank" class="btn-primary">Download</a>` : ''}
+                    ${doc.url ? `<a href="${doc.url}" target="_blank" class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition-colors self-start">Download</a>` : ''}
                 </div>
             `;
         });
         
         return `
-            <div class="detail-section">
-                <h3>Documents (${documents.length})</h3>
-                <div class="documents-list">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Documents (${documents.length})</h3>
+                <div class="space-y-4">
                     ${documentsHTML}
                 </div>
             </div>

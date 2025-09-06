@@ -127,7 +127,7 @@ class OCDSViewer {
 
     renderReleases() {
         if (this.releases.length === 0) {
-            this.domElements.releases.innerHTML = '<div class="no-results">No releases found for the selected criteria.</div>';
+            this.domElements.releases.innerHTML = '<div class="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200 px-4 py-3 rounded-lg">No releases found for the selected criteria.</div>';
             return;
         }
 
@@ -146,19 +146,18 @@ class OCDSViewer {
         const buyer = release.buyer || {};
 
         return `
-            <div class="release-card" onclick="window.location.href='detail.html?ocid=${encodeURIComponent(release.ocid)}'">
-                ${tender.description ? `<div class="release-description">${this.escapeHtml(tender.description)}</div>` : ''}
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 hover:shadow-md transition-shadow cursor-pointer border border-gray-200 dark:border-gray-700" onclick="window.location.href='detail.html?ocid=${encodeURIComponent(release.ocid)}'">
+                ${tender.description ? `<div class="text-gray-700 dark:text-gray-300 text-sm mb-4 line-clamp-2">${this.escapeHtml(tender.description)}</div>` : ''}
                 
-                <div class="release-info">
-                    <div class="info-item">
+                <div class="space-y-3">
+                    <div class="font-medium text-gray-900 dark:text-white">
                         ${procuringEntity.name || buyer.name || 'N/A'}
                     </div>
-                    <div class="info-item">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">
                         ${tender.procurementMethodDetails || tender.procurementMethod || 'N/A'}
                     </div>
-                    <div class="info-item">
-                        ${this.formatDateISO(tenderPeriod.startDate)}<br>
-                        ${this.formatDateISO(tenderPeriod.endDate)}
+                    <div class="text-xs text-gray-500 dark:text-gray-500">
+                        ${this.formatDateISO(tenderPeriod.startDate)} - ${this.formatDateISO(tenderPeriod.endDate)}
                     </div>
                 </div>
             </div>
