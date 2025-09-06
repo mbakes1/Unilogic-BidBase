@@ -3,6 +3,25 @@ class OCDSViewer {
         this.currentPage = 1;
         this.totalReleases = 0;
         this.releases = [];
+        // Cache DOM queries
+        this.domElements = {
+            loadData: document.getElementById('loadData'),
+            prevPage: document.getElementById('prevPage'),
+            nextPage: document.getElementById('nextPage'),
+            loading: document.getElementById('loading'),
+            error: document.getElementById('error'),
+            releases: document.getElementById('releases'),
+            searchInput: document.getElementById('searchInput'),
+            dateFrom: document.getElementById('dateFrom'),
+            dateTo: document.getElementById('dateTo'),
+            pageSize: document.getElementById('pageSize'),
+            totalCount: document.getElementById('totalCount'),
+            currentPage: document.getElementById('currentPage')
+        };
+        // Add request caching
+        this.searchCache = {};
+        // Add search debouncing
+        this.searchTimeout = null;
         this.init();
     }
 
@@ -12,36 +31,54 @@ class OCDSViewer {
     }
 
     bindEvents() {
-        document.getElementById('loadData').addEventListener('click', () => {
+        this.domElements.loadData.addEventListener('click', () => {
             this.currentPage = 1;
             this.loadReleases();
         });
 
-        document.getElementById('prevPage').addEventListener('click', () => {
+        this.domElements.prevPage.addEventListener('click', () => {
             if (this.currentPage > 1) {
                 this.currentPage--;
                 this.loadReleases();
             }
         });
 
-        document.getElementById('nextPage').addEventListener('click', () => {
+        this.domElements.nextPage.addEventListener('click', () => {
             this.currentPage++;
             this.loadReleases();
+        });
+        
+        // Add search debouncing
+        this.domElements.searchInput.addEventListener('input', () => {
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = setTimeout(() => {
+                this.currentPage = 1;
+                this.loadReleases();
+            }, 300); // 300ms delay
         });
     }
 
     async loadReleases() {
-        const loading = document.getElementById('loading');
-        const error = document.getElementById('error');
-        const releasesContainer = document.getElementById('releases');
-
         // Show loading state
-        loading.classList.remove('hidden');
-        error.classList.add('hidden');
-        releasesContainer.innerHTML = '';
+        this.domElements.loading.classList.remove('hidden');
+        this.domElements.error.classList.add('hidden');
+        this.domElements.releases.innerHTML = '';
 
         try {
             const params = this.getQueryParams();
+            const cacheKey = params;
+            
+            // Check cache first
+            if (this.searchCache[cacheKey]) {
+                const cachedData = this.searchCache[cacheKey];
+                this.releases = cachedData.releases || [];
+                this.totalReleases = this.releases.length;
+                this.renderReleases();
+                this.updateStats();
+                this.updatePagination();
+                return;
+            }
+
             const url = `http://localhost:8080/api/OCDSReleases?${params}`;
             
             const response = await fetch(url);
@@ -54,41 +91,52 @@ class OCDSViewer {
             this.releases = data.releases || [];
             this.totalReleases = this.releases.length;
 
+            // Cache the response
+            this.searchCache[cacheKey] = data;
+
             this.renderReleases();
             this.updateStats();
             this.updatePagination();
 
         } catch (err) {
             console.error('Error loading releases:', err);
-            error.textContent = `Error loading data: ${err.message}`;
-            error.classList.remove('hidden');
+            this.domElements.error.textContent = `Error loading data: ${err.message}`;
+            this.domElements.error.classList.remove('hidden');
         } finally {
-            loading.classList.add('hidden');
+            this.domElements.loading.classList.add('hidden');
         }
     }
 
     getQueryParams() {
-        const dateFrom = document.getElementById('dateFrom').value;
-        const dateTo = document.getElementById('dateTo').value;
-        const pageSize = document.getElementById('pageSize').value;
+        const search = this.domElements.searchInput.value;
+        const dateFrom = this.domElements.dateFrom.value;
+        const dateTo = this.domElements.dateTo.value;
+        const pageSize = this.domElements.pageSize.value;
 
-        return new URLSearchParams({
+        const params = {
             PageNumber: this.currentPage,
-            PageSize: pageSize,
-            dateFrom: dateFrom,
-            dateTo: dateTo
-        }).toString();
+            PageSize: pageSize
+        };
+        
+        if (search) params.search = search;
+        if (dateFrom) params.dateFrom = dateFrom;
+        if (dateTo) params.dateTo = dateTo;
+
+        return new URLSearchParams(params).toString();
     }
 
     renderReleases() {
-        const container = document.getElementById('releases');
-        
         if (this.releases.length === 0) {
-            container.innerHTML = '<div class="no-results">No releases found for the selected criteria.</div>';
+            this.domElements.releases.innerHTML = '<div class="no-results">No releases found for the selected criteria.</div>';
             return;
         }
 
-        container.innerHTML = this.releases.map(release => this.createReleaseCard(release)).join('');
+        // Optimize DOM updates by building HTML string first
+        let releasesHTML = '';
+        this.releases.forEach(release => {
+            releasesHTML += this.createReleaseCard(release);
+        });
+        this.domElements.releases.innerHTML = releasesHTML;
     }
 
     createReleaseCard(release) {

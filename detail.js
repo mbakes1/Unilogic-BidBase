@@ -1,6 +1,14 @@
 class TenderDetailViewer {
     constructor() {
         this.ocid = this.getOCIDFromURL();
+        // Cache DOM queries
+        this.domElements = {
+            loading: document.getElementById('loading'),
+            error: document.getElementById('error'),
+            detailContainer: document.getElementById('tender-detail')
+        };
+        // Add request caching
+        this.detailCache = {};
         this.init();
     }
 
@@ -18,15 +26,18 @@ class TenderDetailViewer {
     }
 
     async loadTenderDetail() {
-        const loading = document.getElementById('loading');
-        const error = document.getElementById('error');
-        const detailContainer = document.getElementById('tender-detail');
-
-        loading.classList.remove('hidden');
-        error.classList.add('hidden');
-        detailContainer.classList.add('hidden');
+        this.domElements.loading.classList.remove('hidden');
+        this.domElements.error.classList.add('hidden');
+        this.domElements.detailContainer.classList.add('hidden');
 
         try {
+            // Check cache first
+            if (this.detailCache[this.ocid]) {
+                this.renderTenderDetail(this.detailCache[this.ocid]);
+                this.domElements.detailContainer.classList.remove('hidden');
+                return;
+            }
+
             const url = `http://localhost:8080/api/OCDSReleases/release/${this.ocid}`;
             const response = await fetch(url);
             
@@ -35,19 +46,21 @@ class TenderDetailViewer {
             }
 
             const data = await response.json();
+            // Cache the response
+            this.detailCache[this.ocid] = data;
+            
             this.renderTenderDetail(data);
-            detailContainer.classList.remove('hidden');
+            this.domElements.detailContainer.classList.remove('hidden');
 
         } catch (err) {
             console.error('Error loading tender detail:', err);
             this.showError(`Error loading tender details: ${err.message}`);
         } finally {
-            loading.classList.add('hidden');
+            this.domElements.loading.classList.add('hidden');
         }
     }
 
     renderTenderDetail(release) {
-        const container = document.getElementById('tender-detail');
         const tender = release.tender || {};
         const tenderPeriod = tender.tenderPeriod || {};
         const procuringEntity = tender.procuringEntity || {};
@@ -55,7 +68,8 @@ class TenderDetailViewer {
         const value = tender.value || {};
         const documents = tender.documents || [];
 
-        container.innerHTML = `
+        // Optimize DOM updates by building HTML string first
+        let detailHTML = `
             <div class="detail-card">
                 <div class="detail-header">
                     <h2 class="detail-title">${this.escapeHtml(tender.title || 'Untitled Tender')}</h2>
@@ -102,27 +116,35 @@ class TenderDetailViewer {
                 ${documents.length > 0 ? this.renderDocuments(documents) : ''}
             </div>
         `;
+        
+        this.domElements.detailContainer.innerHTML = detailHTML;
     }
 
     renderDocuments(documents) {
+        // Optimize DOM updates by building HTML string first
+        let documentsHTML = '';
+        documents.forEach(doc => {
+            documentsHTML += `
+                <div class="document-item">
+                    <div class="document-info">
+                        <h4>${this.escapeHtml(doc.title || 'Untitled Document')}</h4>
+                        ${doc.description ? `<p>${this.escapeHtml(doc.description)}</p>` : ''}
+                        <div class="document-meta">
+                            <span>Format: ${doc.format || 'N/A'}</span>
+                            <span>Published: ${this.formatDateISO(doc.datePublished)}</span>
+                            ${doc.dateModified ? `<span>Modified: ${this.formatDateISO(doc.dateModified)}</span>` : ''}
+                        </div>
+                    </div>
+                    ${doc.url ? `<a href="${doc.url}" target="_blank" class="btn-primary">Download</a>` : ''}
+                </div>
+            `;
+        });
+        
         return `
             <div class="detail-section">
                 <h3>Documents (${documents.length})</h3>
                 <div class="documents-list">
-                    ${documents.map(doc => `
-                        <div class="document-item">
-                            <div class="document-info">
-                                <h4>${this.escapeHtml(doc.title || 'Untitled Document')}</h4>
-                                ${doc.description ? `<p>${this.escapeHtml(doc.description)}</p>` : ''}
-                                <div class="document-meta">
-                                    <span>Format: ${doc.format || 'N/A'}</span>
-                                    <span>Published: ${this.formatDateISO(doc.datePublished)}</span>
-                                    ${doc.dateModified ? `<span>Modified: ${this.formatDateISO(doc.dateModified)}</span>` : ''}
-                                </div>
-                            </div>
-                            ${doc.url ? `<a href="${doc.url}" target="_blank" class="btn-primary">Download</a>` : ''}
-                        </div>
-                    `).join('')}
+                    ${documentsHTML}
                 </div>
             </div>
         `;
@@ -165,9 +187,8 @@ class TenderDetailViewer {
     }
 
     showError(message) {
-        const error = document.getElementById('error');
-        error.textContent = message;
-        error.classList.remove('hidden');
+        this.domElements.error.textContent = message;
+        this.domElements.error.classList.remove('hidden');
     }
 }
 
